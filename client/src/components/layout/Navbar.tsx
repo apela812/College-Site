@@ -31,6 +31,9 @@ export function Navbar() {
     { href: "/applicants", label: t('nav.applicants') },
     { href: "/students", label: t('nav.students') },
     { href: "/news", label: t('nav.news') },
+    { href: "/schedule", label: "Расписание" },
+    { href: "/announcements", label: "Объявления" },
+    { href: "/contacts", label: "Контакты" },
   ];
 
   return (

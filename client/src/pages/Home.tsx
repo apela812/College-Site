@@ -73,13 +73,17 @@ export default function Home() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="flex flex-wrap gap-4"
             >
-              <Button size="lg" className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 h-14 text-base group">
-                {t('hero.cta')}
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-base border-2 bg-background/50 backdrop-blur-sm">
-                {t('hero.secondary')}
-              </Button>
+              <Link href="/applicants">
+                <Button size="lg" className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 h-14 text-base group cursor-pointer">
+                  {t('hero.cta')}
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/news">
+                <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-base border-2 bg-background/50 backdrop-blur-sm cursor-pointer">
+                  {t('hero.secondary')}
+                </Button>
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -130,7 +134,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {news?.slice(0, 3).map((item, i) => (
+            {Array.isArray(news) && news.slice(0, 3).map((item: any, i: number) => (
               <motion.div 
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 // Layout
 import { Navbar } from "@/components/layout/Navbar";
@@ -17,6 +18,9 @@ import Applicants from "@/pages/Applicants";
 import Students from "@/pages/Students";
 import News from "@/pages/News";
 import NewsDetail from "@/pages/NewsDetail";
+import Schedule from "@/pages/Schedule";
+import Announcements from "@/pages/Announcements";
+import Contacts from "@/pages/Contacts";
 
 function Router() {
   return (
@@ -30,6 +34,9 @@ function Router() {
           <Route path="/students" component={Students} />
           <Route path="/news" component={News} />
           <Route path="/news/:id" component={NewsDetail} />
+          <Route path="/schedule" component={Schedule} />
+          <Route path="/announcements" component={Announcements} />
+          <Route path="/contacts" component={Contacts} />
           <Route component={NotFound} />
         </Switch>
       </main>
@@ -44,6 +51,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
+          <LanguageSelector />
           <Router />
         </TooltipProvider>
       </QueryClientProvider>

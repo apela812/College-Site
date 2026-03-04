@@ -15,12 +15,12 @@ export default function News() {
   const { data: news, isLoading, error } = useNews();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredNews = news?.filter(item => {
+  const filteredNews = Array.isArray(news) ? news.filter((item: any) => {
     const title = getLocalizedField(item, 'title', lang).toLowerCase();
     const content = getLocalizedField(item, 'content', lang).toLowerCase();
     const term = searchTerm.toLowerCase();
     return title.includes(term) || content.includes(term);
-  });
+  }) : [];
 
   return (
     <PageTransition className="pt-24 pb-20 min-h-screen">
@@ -64,7 +64,7 @@ export default function News() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredNews?.map((item, i) => (
+            {filteredNews.map((item: any, i: number) => (
               <motion.div 
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}

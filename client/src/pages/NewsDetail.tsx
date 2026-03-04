@@ -54,17 +54,17 @@ export default function NewsDetail() {
         <header className="mb-10">
           <div className="flex items-center gap-2 text-primary font-medium mb-6 bg-primary/10 w-fit px-4 py-1.5 rounded-full">
             <Calendar size={16} />
-            {article.publishedAt ? format(new Date(article.publishedAt), 'dd MMMM yyyy') : ''}
+            {(article as any)?.publishedAt ? format(new Date((article as any).publishedAt), 'dd MMMM yyyy') : ''}
           </div>
           <h1 className="text-3xl md:text-5xl font-display font-extrabold leading-tight mb-6">
             {title}
           </h1>
         </header>
 
-        {article.imageUrl && (
+        {(article as any)?.imageUrl && (
           <div className="rounded-3xl overflow-hidden mb-12 shadow-xl border border-border/50">
             <img 
-              src={article.imageUrl} 
+              src={(article as any).imageUrl} 
               alt={title}
               className="w-full h-auto max-h-[600px] object-cover"
             />

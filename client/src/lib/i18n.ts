@@ -116,15 +116,24 @@ const dictionary = {
   }
 };
 
-export const useI18n = create<I18nStore>((set, get) => ({
-  lang: 'ru',
-  setLang: (lang) => set({ lang }),
-  t: (key) => {
-    const { lang } = get();
-    // @ts-ignore
-    return dictionary[lang][key] || key;
-  }
-}));
+export const useI18n = create<I18nStore>((set, get) => {
+  // Загружаем язык из localStorage или используем по умолчанию 'ru'
+  const savedLang = typeof window !== 'undefined' ? localStorage.getItem('almetmed-language') as Language | null : null;
+  const initialLang: Language = (savedLang && ['ru', 'en', 'tt'].includes(savedLang)) ? savedLang : 'ru';
+
+  return {
+    lang: initialLang,
+    setLang: (lang) => {
+      localStorage.setItem('almetmed-language', lang);
+      set({ lang });
+    },
+    t: (key) => {
+      const { lang } = get();
+      // @ts-ignore
+      return dictionary[lang][key] || key;
+    }
+  };
+});
 
 export function getLocalizedField<T extends Record<string, any>>(
   obj: T | undefined | null, 
