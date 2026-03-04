@@ -27,10 +27,16 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: t('nav.home') },
-    { href: "/about", label: t('nav.about') },
+    { href: "/info", label: t('nav.info') },
+    { href: "/anticorruption", label: t('nav.anticorruption') },
+    { href: "/activities", label: t('nav.activities') },
     { href: "/applicants", label: t('nav.applicants') },
-    { href: "/students", label: t('nav.students') },
+    { href: "/about", label: t('nav.about') },
+    { href: "/schedule", label: t('nav.schedule') },
     { href: "/news", label: t('nav.news') },
+    { href: "/media", label: t('nav.media') },
+    { href: "/students", label: t('nav.students') },
+    { href: "/contacts", label: t('nav.contacts') },
   ];
 
   return (
@@ -48,20 +54,20 @@ export function Navbar() {
               <Cross size={24} strokeWidth={2.5} />
             </div>
             <div className="hidden sm:block">
-              <h1 className="font-display font-bold text-lg leading-tight text-foreground">
-                АМК
+              <h1 className="font-display font-bold text-lg leading-tight text-foreground uppercase tracking-wider">
+                ГАПОУ "Альметьевский медицинский колледж"
               </h1>
-              <p className="text-xs text-muted-foreground font-medium">Med College</p>
+              <p className="text-xs text-muted-foreground font-medium">{t('nav.tagline')}</p>
             </div>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
                   location === link.href 
                     ? "bg-primary/10 text-primary" 
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"

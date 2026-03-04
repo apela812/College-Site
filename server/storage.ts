@@ -5,7 +5,7 @@ import {
   type NewsListResponse,
   type InsertNews
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getNews(): Promise<NewsListResponse>;
@@ -15,16 +15,16 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getNews(): Promise<NewsListResponse> {
-    return await db.select().from(news);
+    return db.select().from(news).orderBy(desc(news.publishedAt)).all();
   }
 
   async getNewsItem(id: number): Promise<NewsResponse | undefined> {
-    const [newsItem] = await db.select().from(news).where(eq(news.id, id));
+    const [newsItem] = db.select().from(news).where(eq(news.id, id)).all();
     return newsItem;
   }
 
   async createNewsItem(insertNews: InsertNews): Promise<NewsResponse> {
-    const [newsItem] = await db.insert(news).values(insertNews).returning();
+    const [newsItem] = db.insert(news).values(insertNews).returning().all();
     return newsItem;
   }
 }

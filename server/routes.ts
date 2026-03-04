@@ -91,7 +91,7 @@ export async function registerRoutes(
     }
   }
 
-  // Run seed function after routes are registered
+  // Run seed function
   seedDatabase();
 
   return httpServer;
