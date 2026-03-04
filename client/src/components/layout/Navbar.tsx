@@ -62,15 +62,15 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden xl:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1 bg-accent/30 p-1 rounded-full border border-border/50">
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href}
-                className={`px-3 py-2 rounded-full text-xs font-medium transition-all duration-200 ${
+                className={`px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 whitespace-nowrap ${
                   location === link.href 
-                    ? "bg-primary/10 text-primary" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    ? "bg-primary text-primary-foreground shadow-md" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/80"
                 }`}
               >
                 {link.label}
