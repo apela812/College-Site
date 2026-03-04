@@ -27,16 +27,10 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: t('nav.home') },
-    { href: "/info", label: t('nav.info') },
-    { href: "/anticorruption", label: t('nav.anticorruption') },
-    { href: "/activities", label: t('nav.activities') },
-    { href: "/applicants", label: t('nav.applicants') },
     { href: "/about", label: t('nav.about') },
-    { href: "/schedule", label: t('nav.schedule') },
-    { href: "/news", label: t('nav.news') },
-    { href: "/media", label: t('nav.media') },
+    { href: "/applicants", label: t('nav.applicants') },
     { href: "/students", label: t('nav.students') },
-    { href: "/contacts", label: t('nav.contacts') },
+    { href: "/news", label: t('nav.news') },
   ];
 
   return (

@@ -1,8 +1,27 @@
 {
   "name": "rest-express",
   "version": "1.0.0",
+  "description": "Альметьевский Медицинский Колледж - Веб-сайт",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-repo"
+  },
+  "keywords": [
+    "college",
+    "medical",
+    "website",
+    "react",
+    "typescript",
+    "express"
+  ],
+  "author": "Альметьевский Медицинский Колледж",
+  "homepage": "https://almetmed.ru",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "tsx script/build.ts",
