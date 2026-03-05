@@ -123,6 +123,13 @@ export function Navbar() {
                   <DropdownMenuItem disabled className="text-xs text-muted-foreground">
                     Роль: {user.role}
                   </DropdownMenuItem>
+                  {(user.role === 'student' || user.role === 'teacher') && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="cursor-pointer flex items-center">
+                        📚 Мой кабинет
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   {hasRole('admin', 'dean') && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="cursor-pointer flex items-center">

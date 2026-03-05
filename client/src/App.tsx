@@ -24,6 +24,7 @@ import Announcements from "@/pages/Announcements";
 import Contacts from "@/pages/Contacts";
 import Auth from "@/pages/Auth";
 import AdminPanel from "@/pages/AdminPanel";
+import { StudentPage } from "@/pages/StudentDashboard";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/auth" component={Auth} />
           <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} requiredRoles={['admin', 'dean']} />} />
+          <Route path="/dashboard" component={() => <ProtectedRoute component={StudentPage} requiredRoles={['student', 'teacher']} />} />
           <Route path="/about" component={About} />
           <Route path="/applicants" component={Applicants} />
           <Route path="/students" component={Students} />
