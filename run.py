@@ -538,7 +538,7 @@ def main():
     try:
         # Первый запуск - автоустановка всего необходимого
         if not Path('./node_modules').exists():
-            print_banner()
+            print_header("⚙️  АВТОМАТИЧЕСКАЯ УСТАНОВКА ЗАВИСИМОСТЕЙ")
             if not auto_setup_system():
                 print_error("Не удалось подготовить систему")
                 sys.exit(1)

@@ -3,6 +3,35 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ════════════════════════════════════════════════════════════════════════════
+// ПОЛЬЗОВАТЕЛИ И РОЛИ
+// ════════════════════════════════════════════════════════════════════════════
+export const users = sqliteTable("users", {
+  id: sqliteInteger("id").primaryKey({ autoIncrement: true }),
+  email: sqliteText("email").notNull().unique(),
+  password: sqliteText("password").notNull(),
+  firstName: sqliteText("first_name").notNull(),
+  lastName: sqliteText("last_name").notNull(),
+  role: sqliteText("role").notNull(), // 'admin', 'dean', 'teacher', 'student'
+  groupId: sqliteInteger("group_id"), // для студентов
+  createdAt: sqliteInteger("created_at", { mode: 'timestamp' }).default(new Date()),
+});
+
+export const groups = sqliteTable("groups", {
+  id: sqliteInteger("id").primaryKey({ autoIncrement: true }),
+  name: sqliteText("name").notNull().unique(), // e.g., "группа 101"
+  specialty: sqliteText("specialty"), // специальность
+  yearOfStudy: sqliteInteger("year_of_study"), // 1, 2, 3, 4
+  createdAt: sqliteInteger("created_at", { mode: 'timestamp' }).default(new Date()),
+});
+
+export const groupMembers = sqliteTable("group_members", {
+  id: sqliteInteger("id").primaryKey({ autoIncrement: true }),
+  groupId: sqliteInteger("group_id").notNull(),
+  userId: sqliteInteger("user_id").notNull(),
+  joinedAt: sqliteInteger("joined_at", { mode: 'timestamp' }).default(new Date()),
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // НОВОСТИ
 // ════════════════════════════════════════════════════════════════════════════
 export const news = sqliteTable("news", {
@@ -12,7 +41,7 @@ export const news = sqliteTable("news", {
   contentRu: sqliteText("content_ru").notNull(),
   contentEn: sqliteText("content_en"),
   imageUrl: sqliteText("image_url"),
-  author: sqliteText("author").default("Администрация"),
+  authorId: sqliteInteger("author_id").notNull(), // связь с пользователем
   publishedAt: sqliteInteger("published_at", { mode: 'timestamp' }).default(new Date()),
 });
 
@@ -68,7 +97,27 @@ export const documents = sqliteTable("documents", {
 // ════════════════════════════════════════════════════════════════════════════
 // ZОДИ СХЕМЫ
 // ════════════════════════════════════════════════════════════════════════════
-export const insertNewsSchema = createInsertSchema(news).omit({ id: true, publishedAt: true });
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  role: z.enum(['admin', 'dean', 'teacher', 'student']),
+  groupId: z.number().optional(),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
+export const insertGroupSchema = z.object({
+  name: z.string().min(1),
+  specialty: z.string().optional(),
+  yearOfStudy: z.number().optional(),
+});
+
+export const insertNewsSchema = createInsertSchema(news).omit({ id: true, publishedAt: true, authorId: true });
 export const insertScheduleSchema = createInsertSchema(schedule).omit({ id: true });
 export const insertContactSchema = createInsertSchema(contacts).omit({ id: true });
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, publishedAt: true });
@@ -77,6 +126,14 @@ export const insertDocumentSchema = createInsertSchema(documents).omit({ id: tru
 // ════════════════════════════════════════════════════════════════════════════
 // ТИПЫ
 // ════════════════════════════════════════════════════════════════════════════
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Group = typeof groups.$inferSelect;
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+
+export type GroupMember = typeof groupMembers.$inferSelect;
+
 export type News = typeof news.$inferSelect;
 export type InsertNews = z.infer<typeof insertNewsSchema>;
 

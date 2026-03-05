@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCreateNews } from "@/hooks/use-news";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function CreateNewsDialog() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const { mutate: createNews, isPending } = useCreateNews();
   const { toast } = useToast();
@@ -35,16 +37,22 @@ export function CreateNewsDialog() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user?.id) {
+      toast({ title: "Ошибка", description: "Вы должны быть авторизованы", variant: "destructive" });
+      return;
+    }
+
     createNews(formData, {
       onSuccess: () => {
-        toast({ title: "Success", description: "News created successfully!" });
+        toast({ title: "Успешно", description: "Новость создана успешно!" });
         setOpen(false);
         setFormData({
           titleRu: "", contentRu: "", titleEn: "", contentEn: "", titleTt: "", contentTt: "", imageUrl: ""
         });
       },
-      onError: (err) => {
-        toast({ title: "Error", description: err.message, variant: "destructive" });
+      onError: (err: any) => {
+        toast({ title: "Ошибка", description: err.message, variant: "destructive" });
       }
     });
   };

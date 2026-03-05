@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Layout
 import { Navbar } from "@/components/layout/Navbar";
@@ -21,6 +22,8 @@ import NewsDetail from "@/pages/NewsDetail";
 import Schedule from "@/pages/Schedule";
 import Announcements from "@/pages/Announcements";
 import Contacts from "@/pages/Contacts";
+import Auth from "@/pages/Auth";
+import AdminPanel from "@/pages/AdminPanel";
 
 function Router() {
   return (
@@ -29,6 +32,8 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/auth" component={Auth} />
+          <Route path="/admin" component={() => <ProtectedRoute component={AdminPanel} requiredRoles={['admin', 'dean']} />} />
           <Route path="/about" component={About} />
           <Route path="/applicants" component={Applicants} />
           <Route path="/students" component={Students} />

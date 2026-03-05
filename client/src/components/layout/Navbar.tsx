@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n, type Language } from "@/lib/i18n";
 import { useTheme } from "@/components/theme-provider";
-import { Cross, Menu, Moon, Sun, X, Globe } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Cross, Menu, Moon, Sun, X, Globe, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ export function Navbar() {
   const [location] = useLocation();
   const { lang, setLang, t } = useI18n();
   const { theme, setTheme } = useTheme();
+  const { user, isAuthenticated, logout, hasRole } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -104,6 +106,44 @@ export function Navbar() {
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">{t('theme.toggle')}</span>
             </Button>
+
+            {/* Auth Controls */}
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="rounded-full">
+                    <User className="h-4 w-4 mr-2" />
+                    {user.firstName}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem disabled className="font-semibold">
+                    {user.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                    Роль: {user.role}
+                  </DropdownMenuItem>
+                  {hasRole('admin', 'dean') && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="cursor-pointer flex items-center">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Админ панель
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Выйти
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/auth">
+                <Button variant="default" size="sm" className="rounded-full">
+                  Вход
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button 

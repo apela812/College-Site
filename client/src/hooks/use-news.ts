@@ -1,6 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type NewsInput } from "@shared/routes";
 
+// Helper to get auth token from localStorage
+function getAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('auth_token');
+  }
+  return null;
+}
+
 // Helper to log and parse safely
 function parseWithLogging<T>(schema: any, data: unknown, label: string): T {
   const result = schema.safeParse(data);
@@ -42,15 +50,18 @@ export function useNewsArticle(id: number) {
 
 export function useCreateNews() {
   const queryClient = useQueryClient();
+  const token = getAuthToken();
   
   return useMutation({
     mutationFn: async (data: NewsInput) => {
       const validated = api.news.create.input.parse(data);
       const res = await fetch(api.news.create.path, {
         method: api.news.create.method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify(validated),
-        credentials: "include",
       });
       
       if (!res.ok) {

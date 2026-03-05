@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertNewsSchema, news } from './schema';
+import { insertNewsSchema, news, loginSchema, insertUserSchema } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -12,9 +12,70 @@ export const errorSchemas = {
   internal: z.object({
     message: z.string(),
   }),
+  unauthorized: z.object({
+    message: z.string(),
+  }),
+  forbidden: z.object({
+    message: z.string(),
+  }),
 };
 
 export const api = {
+  auth: {
+    login: {
+      method: 'POST' as const,
+      path: '/api/auth/login' as const,
+      input: loginSchema,
+      responses: {
+        200: z.object({
+          token: z.string(),
+          user: z.object({
+            id: z.number(),
+            email: z.string(),
+            firstName: z.string(),
+            lastName: z.string(),
+            role: z.string(),
+            groupId: z.number().optional(),
+          }),
+        }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    register: {
+      method: 'POST' as const,
+      path: '/api/auth/register' as const,
+      input: insertUserSchema,
+      responses: {
+        201: z.object({
+          token: z.string(),
+          user: z.object({
+            id: z.number(),
+            email: z.string(),
+            firstName: z.string(),
+            lastName: z.string(),
+            role: z.string(),
+            groupId: z.number().optional(),
+          }),
+        }),
+        400: errorSchemas.validation,
+      },
+    },
+    me: {
+      method: 'GET' as const,
+      path: '/api/auth/me' as const,
+      responses: {
+        200: z.object({
+          id: z.number(),
+          email: z.string(),
+          firstName: z.string(),
+          lastName: z.string(),
+          role: z.string(),
+          groupId: z.number().optional(),
+        }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+  },
   news: {
     list: {
       method: 'GET' as const,
@@ -38,6 +99,8 @@ export const api = {
       responses: {
         201: z.custom<typeof news.$inferSelect>(),
         400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+        403: errorSchemas.forbidden,
       },
     }
   }
