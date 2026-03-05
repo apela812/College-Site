@@ -2,9 +2,22 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import os from "os";
 
 const app = express();
 const httpServer = createServer(app);
+
+// CORS для локальной сети
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 declare module "http" {
   interface IncomingMessage {
@@ -90,14 +103,36 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
+  const host = process.env.HOST || "0.0.0.0";
+  
   httpServer.listen(
     {
       port,
-      host: "0.0.0.0",
+      host,
       reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);
+      
+      // Получаем IP адреса
+      const interfaces = os.networkInterfaces();
+      const ips: string[] = ["localhost"];
+      for (const name in interfaces) {
+        const addresses = interfaces[name];
+        if (addresses) {
+          for (const addr of addresses) {
+            if (addr.family === "IPv4") {
+              ips.push(addr.address);
+            }
+          }
+        }
+      }
+      
+      console.log(`\n🌐 Доступно на локальной сети по адресам:\n`);
+      ips.forEach(ip => {
+        console.log(`   → http://${ip}:${port}`);
+      });
+      console.log("\n");
     },
   );
 })();

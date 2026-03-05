@@ -9,6 +9,7 @@ import sys
 import platform
 import subprocess
 import json
+import socket
 from pathlib import Path
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -83,6 +84,41 @@ def input_choice(prompt="Выбор"):
         print(f"\n\n{Colors.WARNING}Программа прервана{Colors.ENDC}")
         sys.exit(0)
 
+def get_local_ip():
+    """Получить локальный IP-адрес"""
+    try:
+        # Попытка получить реальный локальный IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "127.0.0.1"
+
+def get_all_local_ips():
+    """Получить все локальные IP-адреса"""
+    import socket as sock_module
+    ips = []
+    try:
+        hostname = sock_module.gethostname()
+        ips = sock_module.gethostbyname_ex(hostname)[2]
+    except:
+        pass
+    
+    # Добавляем локальные адреса
+    if "127.0.0.1" not in ips:
+        ips.insert(0, "127.0.0.1")
+    if "localhost" not in ips:
+        ips.insert(0, "localhost")
+    
+    # Получаем основной IP
+    primary_ip = get_local_ip()
+    if primary_ip not in ips:
+        ips.append(primary_ip)
+    
+    return list(dict.fromkeys(ips))  # Убираем дубликаты, сохраняя порядок
+
 # ════════════════════════════════════════════════════════════════════════════
 # ПРОВЕРКИ ТРЕБОВАНИЙ
 # ════════════════════════════════════════════════════════════════════════════
@@ -104,6 +140,50 @@ def command_exists(command):
     except:
         return False
 
+def install_node_js():
+    """Установить Node.js"""
+    print_warn("Node.js не найден. Попытаюсь установить...")
+    system = platform.system()
+    
+    try:
+        if system == "Linux":
+            # Для Linux (Fedora/Ubuntu/Debian)
+            distro_check = subprocess.run(['lsb_release', '-si'], 
+                                        capture_output=True, text=True, timeout=5)
+            distro = distro_check.stdout.strip().lower() if distro_check.returncode == 0 else ""
+            
+            if 'ubuntu' in distro or 'debian' in distro:
+                print_info("Установка Node.js через apt...")
+                subprocess.run(['sudo', 'apt', 'update'], check=True)
+                subprocess.run(['sudo', 'apt', 'install', '-y', 'nodejs', 'npm'], check=True)
+            elif 'fedora' in distro or 'rhel' in distro or 'centos' in distro:
+                print_info("Установка Node.js через dnf...")
+                subprocess.run(['sudo', 'dnf', 'install', '-y', 'nodejs', 'npm'], check=True)
+            else:
+                print_info("Установка Node.js через curl...")
+                subprocess.run(['bash', '-c', 'curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -'], check=True)
+                subprocess.run(['sudo', 'apt', 'install', '-y', 'nodejs'], check=True)
+        
+        elif system == "Darwin":
+            print_info("Установка Node.js через Homebrew...")
+            subprocess.run(['brew', 'install', 'node'], check=True)
+        
+        elif system == "Windows":
+            print_error("На Windows используй официальный инсталлятор:")
+            print_info("Скачай с https://nodejs.org/")
+            return False
+        
+        if command_exists('node'):
+            print_success("Node.js успешно установлен")
+            return True
+        else:
+            print_error("Не удалось установить Node.js")
+            return False
+    
+    except Exception as e:
+        print_error(f"Ошибка при установке Node.js: {e}")
+        return False
+
 def get_version(command):
     """Получить версию команды"""
     try:
@@ -115,22 +195,70 @@ def get_version(command):
     except:
         return 'unknown'
 
+def auto_setup_system():
+    """Автоматическая настройка системы"""
+    print_title("🚀 Автоматическая подготовка системы")
+    
+    # Проверка Node.js
+    print_info("Проверка Node.js...")
+    if not command_exists('node'):
+        print_warn("Node.js не найден, устанавливаю...")
+        if not install_node_js():
+            return False
+    else:
+        print_success(f"Node.js установлен: {get_version('node')}")
+    
+    # Проверка npm
+    print_info("Проверка npm...")
+    if not command_exists('npm'):
+        print_error("npm не найден после установки Node.js")
+        return False
+    else:
+        print_success(f"npm установлен: {get_version('npm')}")
+    
+    # Обновление npm до последней версии
+    print_info("Проверка обновлений npm...")
+    try:
+        subprocess.run(['npm', 'install', '-g', 'npm@latest'], 
+                     stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL,
+                     timeout=30)
+        print_success(f"npm обновлен: {get_version('npm')}")
+    except:
+        print_warn("Не удалось обновить npm, продолжаю...")
+    
+    # Проверка и установка зависимостей
+    print_info("Проверка зависимостей проекта...")
+    if not Path('./node_modules').exists() or \
+       not Path('./node_modules/typescript').exists():
+        print_warn("Зависимости не установлены, устанавливаю...")
+        if not install_dependencies():
+            return False
+    else:
+        print_success("Все зависимости установлены")
+    
+    print_success("✓ Система готова к работе!")
+    return True
+
 def check_requirements():
-    """Проверить требования системы"""
-    print_title("Проверка требований")
+    """Проверить требования системы и установить если нужно"""
+    print_title("Проверка и автоустановка требований")
     
     # Node.js
     if not command_exists('node'):
-        print_error("Node.js не установлен!")
-        print_info("Скачайте с https://nodejs.org/")
-        return False
+        print_warn("Node.js не установлен!")
+        if not install_node_js():
+            print_error("Не удалось установить Node.js")
+            print_info("Установите вручную с https://nodejs.org/")
+            return False
+    
     node_ver = get_version('node')
     print_success(f"Node.js {node_ver}")
     
     # npm
     if not command_exists('npm'):
         print_error("NPM не найден!")
-        print_info("Скачайте Node.js с https://nodejs.org/")
+        print_info("Переустановите Node.js с https://nodejs.org/")
         return False
     
     npm_ver = get_version('npm')
@@ -143,25 +271,48 @@ def check_requirements():
     print_success("package.json найден")
     
     return True, 'npm'
-    
-    return True, package_manager
 
 def install_dependencies():
     """Установить зависимости"""
     print_title("Установка зависимостей")
     
     if Path('./node_modules').exists():
-        print_success("Зависимости уже установлены")
-        return True
+        # Проверим, все ли нужные модули есть
+        if Path('./node_modules/typescript').exists() and \
+           Path('./node_modules/tsx').exists() and \
+           Path('./node_modules/vite').exists():
+            print_success("Все зависимости уже установлены")
+            return True
     
-    print_info("Установка с npm...")
+    print_info("Установка зависимостей проекта...")
     
     try:
-        subprocess.run(['npm', 'install'], check=True)
-        print_success("Зависимости установлены")
-        return True
-    except:
-        print_error("Не удалось установить зависимости")
+        result = subprocess.run(['npm', 'install'], capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            print_success("Зависимости успешно установлены")
+            return True
+        else:
+            print_error("Ошибка при установке зависимостей:")
+            print(result.stderr)
+            
+            # Пытаемся исправить через npm audit fix
+            print_info("Пытаюсь исправить зависимости...")
+            subprocess.run(['npm', 'audit', 'fix', '--force'], 
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+            
+            # Повторная попытка
+            result = subprocess.run(['npm', 'install'], capture_output=True, text=True)
+            if result.returncode == 0:
+                print_success("Зависимости установлены после исправления")
+                return True
+            else:
+                print_error("Не удалось установить зависимости")
+                return False
+    
+    except Exception as e:
+        print_error(f"Ошибка: {e}")
         return False
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -215,7 +366,7 @@ def show_main_menu():
     """Главное меню"""
     show_banner()
     
-    # Проверка требований
+    # Автоматическая проверка и установка требований
     result = check_requirements()
     if result is False or (isinstance(result, tuple) and not result[0]):
         print_error("Система не готова к запуску")
@@ -223,6 +374,15 @@ def show_main_menu():
         return
     
     manager = result[1] if isinstance(result, tuple) else 'npm'
+    
+    # Автоматическая установка зависимостей если их нет
+    if not Path('./node_modules').exists():
+        print_warn("Обнаружено отсутствие зависимостей. Устанавливаю...")
+        if not install_dependencies():
+            print_error("Не удалось установить зависимости")
+            input_choice("Нажмите Enter для выхода")
+            return
+        print_success("Зависимости установлены!\n")
     
     while True:
         show_banner()
@@ -263,10 +423,20 @@ def run_dev():
     """Запустить dev"""
     print_title("▶ Запуск проекта в режиме разработки")
     
+    all_ips = get_all_local_ips()
+    
     # Красивый вывод ссылок
     print(f"\n{Colors.BOLD}{Colors.OKGREEN}═══════════════════════════════════════════════════════════{Colors.ENDC}")
     print(f"{Colors.BOLD}📱 ССЫЛКА НА ПРОЕКТ:{Colors.ENDC}")
-    print(f"{Colors.BOLD}{Colors.OKBLUE}  • Открыть в браузере: {Colors.ENDC}{Colors.UNDERLINE}http://localhost:5000{Colors.ENDC}")
+    
+    for ip in all_ips:
+        if ip == "localhost":
+            print(f"{Colors.BOLD}{Colors.OKBLUE}  • Локально:{Colors.ENDC} {Colors.UNDERLINE}http://{ip}:5000{Colors.ENDC}")
+        elif ip == "127.0.0.1":
+            print(f"{Colors.BOLD}{Colors.OKBLUE}  • На этом компьютере:{Colors.ENDC} {Colors.UNDERLINE}http://{ip}:5000{Colors.ENDC}")
+        else:
+            print(f"{Colors.BOLD}{Colors.OKBLUE}  • Локальная сеть:{Colors.ENDC} {Colors.UNDERLINE}http://{ip}:5000{Colors.ENDC}")
+    
     print(f"{Colors.DIM}    (Vite dev сервер встроен в Express на том же порту){Colors.ENDC}")
     print(f"{Colors.BOLD}{Colors.OKGREEN}═══════════════════════════════════════════════════════════{Colors.ENDC}\n")
     
@@ -307,6 +477,21 @@ def run_start():
         print_info("Сначала нужно собрать проект (опция 2)")
         input_choice("Нажмите Enter для продолжения")
         return
+    
+    all_ips = get_all_local_ips()
+    
+    print(f"\n{Colors.BOLD}{Colors.OKGREEN}═══════════════════════════════════════════════════════════{Colors.ENDC}")
+    print(f"{Colors.BOLD}📱 ССЫЛКА НА ПРОЕКТ:{Colors.ENDC}")
+    
+    for ip in all_ips:
+        if ip == "localhost":
+            print(f"{Colors.BOLD}{Colors.OKBLUE}  • Локально:{Colors.ENDC} {Colors.UNDERLINE}http://{ip}:5000{Colors.ENDC}")
+        elif ip == "127.0.0.1":
+            print(f"{Colors.BOLD}{Colors.OKBLUE}  • На этом компьютере:{Colors.ENDC} {Colors.UNDERLINE}http://{ip}:5000{Colors.ENDC}")
+        else:
+            print(f"{Colors.BOLD}{Colors.OKBLUE}  • Локальная сеть:{Colors.ENDC} {Colors.UNDERLINE}http://{ip}:5000{Colors.ENDC}")
+    
+    print(f"{Colors.BOLD}{Colors.OKGREEN}═══════════════════════════════════════════════════════════{Colors.ENDC}\n")
     
     try:
         subprocess.run(['npm', 'start'])
@@ -351,12 +536,22 @@ def reinstall_deps():
 def main():
     """Главная функция"""
     try:
+        # Первый запуск - автоустановка всего необходимого
+        if not Path('./node_modules').exists():
+            print_banner()
+            if not auto_setup_system():
+                print_error("Не удалось подготовить систему")
+                sys.exit(1)
+            input_choice("Нажмите Enter для продолжения")
+        
         show_main_menu()
     except KeyboardInterrupt:
         print(f"\n\n{Colors.WARNING}Программа прервана{Colors.ENDC}\n")
         sys.exit(0)
     except Exception as e:
         print_error(f"Критическая ошибка: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == '__main__':

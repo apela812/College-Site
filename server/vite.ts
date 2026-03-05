@@ -5,14 +5,39 @@ import viteConfig from "../vite.config";
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import net from "net";
 
 const viteLogger = createLogger();
 
+// Функция для поиска свободного порта
+async function findFreePort(startPort: number = 24678): Promise<number> {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(startPort, "0.0.0.0", () => {
+      const port = (server.address() as net.AddressInfo).port;
+      server.close(() => {
+        resolve(port);
+      });
+    });
+    server.on("error", () => {
+      resolve(findFreePort(startPort + 1));
+    });
+  });
+}
+
 export async function setupVite(server: Server, app: Express) {
+  // Получаем свободный порт для HMR
+  const hmrPort = await findFreePort();
+  const host = process.env.HOST || "0.0.0.0";
+  
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server, path: "/vite-hmr" },
-    allowedHosts: true as const,
+    hmr: { 
+      protocol: "ws",
+      host: undefined, // Позволяет браузеру использовать свой хост
+      port: hmrPort,   // Автоматически найденный свободный порт
+    },
+    allowedHosts: "all",
   };
 
   const vite = await createViteServer({
@@ -21,8 +46,11 @@ export async function setupVite(server: Server, app: Express) {
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
+        // Игнорируем ошибки про WebSocket порт - он будет автоматически переназначен
+        if (!msg.includes("WebSocket") && !msg.includes("port")) {
+          viteLogger.error(msg, options);
+          process.exit(1);
+        }
       },
     },
     server: serverOptions,

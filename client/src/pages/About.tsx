@@ -42,7 +42,7 @@ export default function About() {
             </div>
             <h3 className="text-xl font-bold mb-4">Богатая история</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Основанный более 50 лет назад, колледж выпустил тысячи специалистов, 
+              Основанный 15 июня 1990 года, колледж выпустил тысячи специалистов, 
               которые сегодня спасают жизни по всей стране.
             </p>
           </div>

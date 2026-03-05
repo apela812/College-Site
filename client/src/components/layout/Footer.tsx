@@ -55,7 +55,7 @@ export function Footer() {
         </div>
         
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Almetyevsk Medical College. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Almetyevsk Medical College. Основан 15 июня 1990 года. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <Link href="/" className="hover:text-primary transition-colors">Terms of Service</Link>
