@@ -67,7 +67,7 @@ export default function Contacts() {
               423450, Республика Татарстан
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              г. Альметьевск, ул. Тельмана, д. 58
+              Альметьевск, ул. Шевченко, д. 2Г
             </p>
           </div>
 

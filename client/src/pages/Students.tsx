@@ -95,7 +95,7 @@ export default function Students() {
                     <MapPin className="text-primary w-6 h-6 shrink-0" />
                     <div>
                       <h4 className="font-bold">Адрес:</h4>
-                      <p className="text-muted-foreground">г. Альметьевск, ул. Тельмана, д. 58</p>
+                      <p className="text-muted-foreground">Альметьевск, ул. Шевченко, д. 2Г</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
