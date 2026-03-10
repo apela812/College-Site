@@ -3,11 +3,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { GroupManager } from '@/components/GroupManager';
 import { UserManager } from '@/components/admin/UserManager';
 import { ScheduleManager } from '@/components/admin/ScheduleManager';
+import { ScheduleViewer } from '@/components/admin/ScheduleViewer';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { useLocation } from 'wouter';
 import { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, BookOpen, Newspaper, BarChart3 } from 'lucide-react';
+import { Users, BookOpen, Newspaper, BarChart3, Calendar } from 'lucide-react';
 
 export default function AdminPanel() {
   const { user, isLoading } = useAuth();
@@ -44,14 +45,18 @@ export default function AdminPanel() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
             <TabsTrigger value="stats" className="gap-2">
               <BarChart3 size={18} />
               <span className="hidden sm:inline">Статистика</span>
             </TabsTrigger>
             <TabsTrigger value="schedule" className="gap-2">
               <BookOpen size={18} />
-              <span className="hidden sm:inline">Расписание</span>
+              <span className="hidden sm:inline">Управление</span>
+            </TabsTrigger>
+            <TabsTrigger value="schedule-view" className="gap-2">
+              <Calendar size={18} />
+              <span className="hidden sm:inline">Просмотр</span>
             </TabsTrigger>
             <TabsTrigger value="groups" className="gap-2">
               <Newspaper size={18} />
@@ -71,6 +76,12 @@ export default function AdminPanel() {
 
           <TabsContent value="schedule" className="space-y-6 mt-6">
             <ScheduleManager />
+          </TabsContent>
+
+          <TabsContent value="schedule-view" className="space-y-6 mt-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <ScheduleViewer />
+            </div>
           </TabsContent>
 
           <TabsContent value="groups" className="space-y-6 mt-6">

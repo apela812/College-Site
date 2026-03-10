@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Edit2, Download, Copy, Search, Clock, Users, BookOpen, MapPin } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Plus, Edit2, Download, Copy, Search, Clock, Users, BookOpen, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 
 // Дни недели: 1=Понедельник, 2=Вторник, ..., 7=Воскресенье
 const DAYS_OF_WEEK = [
@@ -15,8 +16,19 @@ const DAYS_OF_WEEK = [
   { value: "3", label: "Среда" },
   { value: "4", label: "Четверг" },
   { value: "5", label: "Пятница" },
-  { value: "6", label: "Суббота" },
+  { value: "6", label: "Суббota" },
   { value: "7", label: "Воскресенье" },
+];
+
+// Предопределённые пары с временем
+const LESSON_SLOTS = [
+  { id: 1, number: "1 Пара", startTime: "08:00", endTime: "09:30" },
+  { id: 2, number: "2 Пара", startTime: "09:40", endTime: "11:10" },
+  { id: 3, number: "3 Пара", startTime: "11:30", endTime: "13:20" },
+  { id: 4, number: "4 Пара", startTime: "13:30", endTime: "15:00" },
+  { id: 5, number: "5 Пара", startTime: "15:10", endTime: "16:40" },
+  { id: 6, number: "6 Пара", startTime: "16:50", endTime: "18:20" },
+  { id: 7, number: "7 Пара", startTime: "18:30", endTime: "20:00" },
 ];
 
 interface ScheduleItem {
@@ -38,12 +50,15 @@ export function ScheduleManager() {
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<"day" | "group" | "time">("day");
+  const [expandedDaySlots, setExpandedDaySlots] = useState<string>("");
+  const [showLessonSelector, setShowLessonSelector] = useState(false);
 
   const [formData, setFormData] = useState({
     group: "",
     subject: "",
     teacher: "",
     dayOfWeek: "",
+    selectedLessons: [] as number[],
     startTime: "",
     endTime: "",
     classroom: "",
@@ -83,6 +98,9 @@ export function ScheduleManager() {
         ...data,
         dayOfWeek: parseInt(data.dayOfWeek),
       };
+      
+      // Удаляем selectedLessons, так как это только для UI
+      delete (submitData as any).selectedLessons;
 
       const res = await fetch(url, {
         method,
@@ -154,19 +172,26 @@ export function ScheduleManager() {
       subject: "",
       teacher: "",
       dayOfWeek: "",
+      selectedLessons: [],
       startTime: "",
       endTime: "",
       classroom: "",
     });
     setEditingId(null);
+    setShowLessonSelector(false);
   };
 
   const handleEdit = (item: ScheduleItem) => {
+    const matchingSlot = LESSON_SLOTS.find(
+      slot => slot.startTime === item.startTime && slot.endTime === item.endTime
+    );
+    
     setFormData({
       group: item.group,
       subject: item.subject,
       teacher: item.teacher,
       dayOfWeek: String(item.dayOfWeek),
+      selectedLessons: matchingSlot ? [matchingSlot.id] : [],
       startTime: item.startTime,
       endTime: item.endTime,
       classroom: item.classroom,
@@ -177,7 +202,31 @@ export function ScheduleManager() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    upsertMutation.mutate(formData);
+    
+    // Если выбраны пары, берём время из первой пары (для совместимости)
+    // Или можно создать несколько записей для каждой пары
+    if (formData.selectedLessons.length > 0) {
+      // Создаём запись для каждой выбранной пары
+      formData.selectedLessons.forEach(lessonId => {
+        const slot = LESSON_SLOTS.find(s => s.id === lessonId);
+        if (slot) {
+          upsertMutation.mutate({
+            ...formData,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          });
+        }
+      });
+    } else if (formData.startTime && formData.endTime) {
+      // Если пара не выбрана, используем ручное время
+      upsertMutation.mutate(formData);
+    } else {
+      toast({
+        title: "Ошибка",
+        description: "Выберите пару или укажите время вручную",
+        variant: "destructive",
+      });
+    }
   };
 
   const getDayLabel = (dayOfWeek: number) => {
@@ -185,11 +234,16 @@ export function ScheduleManager() {
   };
 
   const handleDuplicate = (item: ScheduleItem) => {
+    const matchingSlot = LESSON_SLOTS.find(
+      slot => slot.startTime === item.startTime && slot.endTime === item.endTime
+    );
+    
     setFormData({
       group: item.group,
       subject: item.subject,
       teacher: item.teacher,
       dayOfWeek: String(item.dayOfWeek),
+      selectedLessons: matchingSlot ? [matchingSlot.id] : [],
       startTime: item.startTime,
       endTime: item.endTime,
       classroom: item.classroom,
@@ -323,31 +377,95 @@ export function ScheduleManager() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold mb-1 flex items-center gap-1 uppercase tracking-wide text-muted-foreground">
-                    <Clock size={14} />
-                    Начало
-                  </label>
-                  <Input
-                    type="time"
-                    value={formData.startTime}
-                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                    required
-                    className="border-2 h-9"
-                  />
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold mb-1 block uppercase tracking-wide text-muted-foreground">Пара</label>
+                  <Button
+                    type="button"
+                    onClick={() => setShowLessonSelector(!showLessonSelector)}
+                    variant="outline"
+                    className="w-full border-2 h-9 justify-between"
+                  >
+                    <span className="text-sm">
+                      {formData.selectedLessons.length > 0 
+                        ? `Выбрано ${formData.selectedLessons.length}`
+                        : "Выберите пару..."}
+                    </span>
+                    {showLessonSelector ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </Button>
+                  
+                  {showLessonSelector && (
+                    <div className="mt-2 p-3 border-2 rounded-lg space-y-2 bg-slate-50 dark:bg-slate-900">
+                      {LESSON_SLOTS.map((slot) => (
+                        <div key={slot.id} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`lesson-${slot.id}`}
+                            checked={formData.selectedLessons.includes(slot.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFormData({
+                                  ...formData,
+                                  selectedLessons: [...formData.selectedLessons, slot.id]
+                                });
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  selectedLessons: formData.selectedLessons.filter(id => id !== slot.id)
+                                });
+                              }
+                            }}
+                          />
+                          <label 
+                            htmlFor={`lesson-${slot.id}`}
+                            className="text-sm cursor-pointer flex-1 flex items-center justify-between"
+                          >
+                            <span className="font-semibold">{slot.number}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {slot.startTime}–{slot.endTime}
+                            </span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="text-xs font-semibold mb-1 flex items-center gap-1 uppercase tracking-wide text-muted-foreground">
-                    <Clock size={14} />
-                    Конец
-                  </label>
-                  <Input
-                    type="time"
-                    value={formData.endTime}
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                    required
-                    className="border-2 h-9"
-                  />
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex gap-2">
+                  <div className="text-xs text-blue-700 dark:text-blue-300">
+                    <p className="font-semibold mb-1">💡 Совет:</p>
+                    <p>Выберите одну или несколько пар из списка выше, чтобы автоматически заполнить время.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground">
+                <p className="font-semibold mb-2">или укажите время вручную:</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold mb-1 flex items-center gap-1 uppercase tracking-wide text-muted-foreground block">
+                      <Clock size={14} />
+                      Начало
+                    </label>
+                    <Input
+                      type="time"
+                      value={formData.startTime}
+                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                      className="border-2 h-9"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold mb-1 flex items-center gap-1 uppercase tracking-wide text-muted-foreground block">
+                      <Clock size={14} />
+                      Конец
+                    </label>
+                    <Input
+                      type="time"
+                      value={formData.endTime}
+                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                      className="border-2 h-9"
+                    />
+                  </div>
                 </div>
               </div>
 
