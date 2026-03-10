@@ -4,13 +4,16 @@ import { useNews } from "@/hooks/use-news";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DemoTour } from "@/components/DemoTour";
 import { format } from "date-fns";
-import { ArrowRight, BookOpen, Stethoscope, Users, Calendar } from "lucide-react";
+import { ArrowRight, BookOpen, Stethoscope, Users, Calendar, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function Home() {
   const { t, lang } = useI18n();
   const { data: news, isLoading } = useNews();
+  const [demoOpen, setDemoOpen] = useState(false);
 
   const stats = [
     { icon: <Users size={32} />, label: t('stats.students'), value: "1,200+" },
@@ -84,6 +87,14 @@ export default function Home() {
                   {t('hero.secondary')}
                 </Button>
               </Link>
+              <Button 
+                size="lg" 
+                onClick={() => setDemoOpen(true)}
+                className="rounded-full px-8 h-14 text-base bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple/25 group gap-2 cursor-pointer"
+              >
+                <Zap size={20} className="animate-pulse" />
+                Демонстрация
+              </Button>
             </motion.div>
           </div>
         </div>
@@ -187,6 +198,9 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Demo Tour */}
+      <DemoTour isOpen={demoOpen} onClose={() => setDemoOpen(false)} />
     </PageTransition>
   );
 }

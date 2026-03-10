@@ -3,7 +3,8 @@ import { Link, useLocation } from "wouter";
 import { useI18n, type Language } from "@/lib/i18n";
 import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/use-auth";
-import { Cross, Menu, Moon, Sun, X, Globe, LogOut, User, Shield } from "lucide-react";
+import { DemoTour } from "@/components/DemoTour";
+import { Cross, Menu, Moon, Sun, X, Globe, LogOut, User, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ export function Navbar() {
   const { user, isAuthenticated, logout, hasRole } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -152,6 +154,17 @@ export function Navbar() {
               </Link>
             )}
 
+            {/* Demo Tour Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full hidden sm:flex gap-1 text-purple-600 hover:text-purple-700 hover:bg-purple-100/50 dark:hover:bg-purple-900/30"
+              onClick={() => setDemoOpen(true)}
+            >
+              <Zap size={16} />
+              <span className="text-xs font-semibold">Тур</span>
+            </Button>
+
             {/* Mobile Menu Toggle */}
             <Button 
               variant="ghost" 
@@ -179,7 +192,7 @@ export function Navbar() {
                 <X className="h-6 w-6" />
               </Button>
             </div>
-            <nav className="flex flex-col gap-4 text-center">
+            <nav className="flex flex-col gap-4 text-center flex-1">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
@@ -193,9 +206,24 @@ export function Navbar() {
                 </Link>
               ))}
             </nav>
+
+            {/* Demo Tour Button in Mobile Menu */}
+            <Button
+              onClick={() => {
+                setDemoOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full mt-6 gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full py-6 text-base"
+            >
+              <Zap size={18} className="animate-pulse" />
+              Запустить демонстрацию
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Demo Tour */}
+      <DemoTour isOpen={demoOpen} onClose={() => setDemoOpen(false)} />
     </header>
   );
 }
